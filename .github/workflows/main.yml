@@ -18,15 +18,13 @@ jobs:
           sudo apt-get install -y libxml2-utils
         shell: bash
 
-      - name: Extract Java Version
-        id: extract-java-version
+      - name: Set up Java JDK
         run: |
-          JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" pom.xml)
-          echo "Java Version: $JAVA_VERSION"
-          echo "JAVA_VERSION=$JAVA_VERSION" >> $GITHUB_ENV
-          echo "$GITHUB_ENV"
-          
-          # Install the required Java version using AdoptOpenJDK
+          # Use the environment variable set in the previous step
+          JAVA_VERSION=$JAVA_VERSION
+          echo "Setting up JDK for Java Version: $JAVA_VERSION"
+
+          # Install and set up the required Java version using AdoptOpenJDK
           if [[ "$JAVA_VERSION" == "15" ]]; then
             curl -sL https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz | tar xz -C /usr/lib/jvm
             export JAVA_HOME="/usr/lib/jvm/jdk-15.0.2+7"
