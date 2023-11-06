@@ -11,6 +11,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Set up Tools
+        run: |
+          # Install the required tools
+          sudo apt-get update -qq
+          sudo apt-get install -y libxml2-utils
+        shell: bash
+
       - name: Set up Java JDK
         run: |
           # Extract Java version from pom.xml
