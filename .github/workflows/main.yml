@@ -20,9 +20,8 @@ jobs:
 
       - name: Set up Java JDK
         run: |
-          # Extract Java version from pom.xml
           JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" pom.xml)
-          echo "Java Version: $JAVA_VERSION"
+          echo "::set-output name=java_version::$JAVA_VERSION"
           
           # Install the required Java version using AdoptOpenJDK
           if [[ "$JAVA_VERSION" == "15" ]]; then
