@@ -18,10 +18,18 @@ jobs:
           sudo apt-get install -y libxml2-utils
         shell: bash
 
+      - name: Extract Java Version
+        id: extract-java-version
+        run: |
+          JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" "${{ runner.workspace }}/pom.xml")
+          echo "Java Version: $JAVA_VERSION"
+          echo "JAVA_VERSION=$JAVA_VERSION" >> $GITHUB_ENV
+        shell: bash
+
       - name: Set up Java JDK
         run: |
           # Use the environment variable set in the previous step
-          JAVA_VERSION=$JAVA_VERSION
+          JAVA_VERSION=${{ env.JAVA_VERSION }}
           echo "Setting up JDK for Java Version: $JAVA_VERSION"
 
           # Install and set up the required Java version using AdoptOpenJDK
