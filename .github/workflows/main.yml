@@ -21,55 +21,55 @@ jobs:
           find . -type f -name "pom.xml" -print -quit
         shell: bash
 
-      # - name: Extract Java Version
-      #   id: extract-java-version
-      #   run: |
-      #     JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" "${{ runner.workspace }}/pom.xml")
-      #     echo "Java Version: $JAVA_VERSION"
-      #     echo "JAVA_VERSION=$JAVA_VERSION" >> $GITHUB_ENV
-      #   shell: bash
+      - name: Extract Java Version
+        id: extract-java-version
+        run: |
+          JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" "/home/runner/work/springboot/springboot/pom.xml")
+          echo "Java Version: $JAVA_VERSION"
+          echo "JAVA_VERSION=$JAVA_VERSION" >> $GITHUB_ENV
+        shell: bash
 
-      # - name: Set up Java JDK
-      #   run: |
-      #     # Use the environment variable set in the previous step
-      #     JAVA_VERSION=${{ env.JAVA_VERSION }}
-      #     echo "Setting up JDK for Java Version: $JAVA_VERSION"
+      - name: Set up Java JDK
+        run: |
+          # Use the environment variable set in the previous step
+          JAVA_VERSION=${{ env.JAVA_VERSION }}
+          echo "Setting up JDK for Java Version: $JAVA_VERSION"
 
-      #     # Install and set up the required Java version using AdoptOpenJDK
-      #     if [[ "$JAVA_VERSION" == "15" ]]; then
-      #       curl -sL https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz | tar xz -C /usr/lib/jvm
-      #       export JAVA_HOME="/usr/lib/jvm/jdk-15.0.2+7"
-      #       export PATH="$JAVA_HOME/bin:$PATH"
-      #     elif [[ "$JAVA_VERSION" == "17" ]]; then
-      #       curl -sL https://github.com/AdoptOpenJDK/openjdk17-binaries/releases/download/jdk-17%2B35/OpenJDK17U-jdk_x64_linux_hotspot_17_35.tar.gz | tar xz -C /usr/lib/jvm
-      #       export JAVA_HOME="/usr/lib/jvm/jdk-17+35"
-      #       export PATH="$JAVA_HOME/bin:$PATH"
-      #     else
-      #       echo "Unsupported Java version specified in pom.xml"
-      #       exit 1
-      #     fi
-      #   shell: bash
+          # Install and set up the required Java version using AdoptOpenJDK
+          if [[ "$JAVA_VERSION" == "15" ]]; then
+            curl -sL https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz | tar xz -C /usr/lib/jvm
+            export JAVA_HOME="/usr/lib/jvm/jdk-15.0.2+7"
+            export PATH="$JAVA_HOME/bin:$PATH"
+          elif [[ "$JAVA_VERSION" == "17" ]]; then
+            curl -sL https://github.com/AdoptOpenJDK/openjdk17-binaries/releases/download/jdk-17%2B35/OpenJDK17U-jdk_x64_linux_hotspot_17_35.tar.gz | tar xz -C /usr/lib/jvm
+            export JAVA_HOME="/usr/lib/jvm/jdk-17+35"
+            export PATH="$JAVA_HOME/bin:$PATH"
+          else
+            echo "Unsupported Java version specified in pom.xml"
+            exit 1
+          fi
+        shell: bash
 
-      # - name: Build with Maven
-      #   run: mvn clean package
+      - name: Build with Maven
+        run: mvn clean package
 
-      # - name: unit-test
-      #   run: | 
-      #     mvn test
-      #     ls -la
-      #     ls -la target
-      #     cd target
-      #     cd site
-      #     ls -la jacoco
-      # # Publishing the test results to the Job Summary
+      - name: unit-test
+        run: | 
+          mvn test
+          ls -la
+          ls -la target
+          cd target
+          cd site
+          ls -la jacoco
+      # Publishing the test results to the Job Summary
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2.11.0
+        with:
+          comment_mode: off
+          files: | 
+            target/surefire-reports/TEST-*.xml
       # - name: Publish Test Results
-      #   uses: EnricoMi/publish-unit-test-result-action@v2.11.0
+      #   uses: actions/upload-artifact@v2
       #   with:
-      #     comment_mode: off
-      #     files: | 
-      #       target/surefire-reports/TEST-*.xml
-      # # - name: Publish Test Results
-      # #   uses: actions/upload-artifact@v2
-      # #   with:
-      # #     name: test-results
-      # #     path: target/surefire-reports
+      #     name: test-results
+      #     path: target/surefire-reports
