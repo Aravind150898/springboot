@@ -1,51 +1,40 @@
-#Springboot-jdk-17
-name: main-workflow
+name: Spring Boot CI/CD
+
 on: 
   workflow_dispatch
-env:
-  DB_USER: ${{ secrets.DB_USER }}
-  DB_PASS: ${{ secrets.DB_PASS }}
-  GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      checks: write
-    outputs:
-      file1: ${{ steps.pub.outputs.test}}
+
     steps:
-    # Checking out the code
-      - name: Checkout                            
-        uses: actions/checkout@v4.1.1
-      - name: echo
-        run: |
-          ls -la
-          echo "passed"
-    # Scanning for secret detection
-      - name: GitGuardian Shield Action          
-        run: |
-          pipx install ggshield
-          ggshield secret scan path --recursive ./ -y
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    # Vulnerability Check using Snyk Code
-      - name: Snyk
+      - name: Set up Java JDK
         run: |
-          npm install snyk@latest -g
-          snyk auth ${{ secrets.SNYK_TOKEN }}
-          snyk test --sarif-file-output=snyk.sarif --severity-threshold=high
+          # Extract Java version from pom.xml
+          JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" pom.xml)
+          echo "Java Version: $JAVA_VERSION"
+          
+          # Install the required Java version using AdoptOpenJDK
+          if [[ "$JAVA_VERSION" == "15" ]]; then
+            curl -sL https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz | tar xz -C /usr/lib/jvm
+            export JAVA_HOME="/usr/lib/jvm/jdk-15.0.2+7"
+            export PATH="$JAVA_HOME/bin:$PATH"
+          elif [[ "$JAVA_VERSION" == "17" ]]; then
+            curl -sL https://github.com/AdoptOpenJDK/openjdk17-binaries/releases/download/jdk-17%2B35/OpenJDK17U-jdk_x64_linux_hotspot_17_35.tar.gz | tar xz -C /usr/lib/jvm
+            export JAVA_HOME="/usr/lib/jvm/jdk-17+35"
+            export PATH="$JAVA_HOME/bin:$PATH"
+          else
+            echo "Unsupported Java version specified in pom.xml"
+            exit 1
+          fi
+        shell: bash
 
-    # Analysing the Source Code using SonarCloud
-
-    # Setting up Java Environment
-      - name: Setup Java JDK
-        uses: actions/setup-java@v3.13.0
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: package
+      - name: Build with Maven
         run: mvn clean package
-      - name: file check
-        run: ls -la target
+
       - name: unit-test
         run: | 
           mvn test
@@ -61,11 +50,8 @@ jobs:
           comment_mode: off
           files: | 
             target/surefire-reports/TEST-*.xml
-        
-    #  - name: JaCoCo Report
-    #    uses: Madrapps/jacoco-report@v1.6.1
-    #    with:
-    #      paths: target/site/jacoco/jacoco.xml
-    #      token: ${{secrets.TOKEN_REPO}}
-    #      min-coverage-overall: 60
-      
+      # - name: Publish Test Results
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: test-results
+      #     path: target/surefire-reports
