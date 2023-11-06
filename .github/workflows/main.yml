@@ -18,10 +18,13 @@ jobs:
           sudo apt-get install -y libxml2-utils
         shell: bash
 
-      - name: Set up Java JDK
+      - name: Extract Java Version
+        id: extract-java-version
         run: |
           JAVA_VERSION=$(xmllint --xpath "string(/project/properties/java.version)" pom.xml)
-          echo "::set-output name=java_version::$JAVA_VERSION"
+          echo "Java Version: $JAVA_VERSION"
+          echo "JAVA_VERSION=$JAVA_VERSION" >> $GITHUB_ENV
+          echo "$GITHUB_ENV"
           
           # Install the required Java version using AdoptOpenJDK
           if [[ "$JAVA_VERSION" == "15" ]]; then
